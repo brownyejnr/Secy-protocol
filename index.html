@@ -1,0 +1,1802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SECY PROTOCOL — Bitcoin DeFi Terminal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet" />
+  <style>
+    /* ═══════════════════════════════════════════════════════════
+       CSS DESIGN TOKENS — Crimson Matrix Theme
+    ═══════════════════════════════════════════════════════════ */
+    :root {
+      --bg:          #000000;
+      --surface:     rgba(15,15,15,0.85);
+      --surface2:    rgba(20,5,5,0.7);
+      --border:      rgba(127,29,29,0.45);
+      --border-glow: rgba(220,38,38,0.6);
+      --crimson:     #DC2626;
+      --crimson-dim: #991B1B;
+      --maroon:      #7F1D1D;
+      --maroon-deep: #450a0a;
+      --white:       #FAFAFA;
+      --silver:      #A1A1AA;
+      --dim:         #52525B;
+      --font-display: 'Orbitron', monospace;
+      --font-mono:    'Share Tech Mono', monospace;
+      --font-body:    'Rajdhani', sans-serif;
+      --glow-sm: 0 0 8px rgba(220,38,38,0.4);
+      --glow-md: 0 0 20px rgba(220,38,38,0.35), 0 0 40px rgba(153,27,27,0.2);
+      --glow-lg: 0 0 30px rgba(220,38,38,0.5), 0 0 60px rgba(153,27,27,0.3);
+      --r: 8px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       RESET & BASE
+    ═══════════════════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { cursor: pointer; border: none; background: none; font-family: inherit; }
+    input, select, textarea { font-family: inherit; }
+
+    /* ═══════════════════════════════════════════════════════════
+       MATRIX CANVAS BACKGROUND
+    ═══════════════════════════════════════════════════════════ */
+    #matrix-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.17;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       LAYOUT
+    ═══════════════════════════════════════════════════════════ */
+    #app { position: relative; z-index: 1; }
+
+    /* ═══════════════════════════════════════════════════════════
+       NAVIGATION
+    ═══════════════════════════════════════════════════════════ */
+    .nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      height: 68px;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(16px) saturate(180%);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 1px 30px rgba(127,29,29,0.2);
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      font-weight: 900;
+      letter-spacing: 3px;
+      color: var(--white);
+    }
+    .nav-logo-icon {
+      width: 34px; height: 34px;
+      border: 2px solid var(--crimson);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.9rem;
+      box-shadow: var(--glow-sm);
+      background: rgba(220,38,38,0.1);
+    }
+    .nav-logo span { color: var(--crimson); }
+    .nav-tabs {
+      display: flex;
+      gap: 4px;
+    }
+    .nav-tab {
+      padding: 8px 20px;
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--silver);
+      border-radius: 6px;
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+    }
+    .nav-tab:hover {
+      color: var(--white);
+      border-color: var(--border);
+      background: var(--surface2);
+    }
+    .nav-tab.active {
+      color: var(--crimson);
+      border-color: var(--border-glow);
+      background: rgba(127,29,29,0.15);
+      box-shadow: var(--glow-sm);
+    }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+
+    /* Wallet button */
+    .btn-wallet {
+      padding: 8px 12px;
+      font-family: var(--font-display);
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--white);
+      background: linear-gradient(135deg, var(--crimson-dim), var(--crimson));
+      border: 1px solid var(--crimson);
+      border-radius: 6px;
+      transition: all 0.25s ease;
+      white-space: nowrap;
+      max-width: 130px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .btn-wallet:hover {
+      background: linear-gradient(135deg, var(--crimson), #ef4444);
+      box-shadow: var(--glow-md);
+      transform: translateY(-1px);
+    }
+    .btn-wallet.connected {
+      background: rgba(127,29,29,0.2);
+      border-color: var(--border-glow);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+    }
+
+    /* Hamburger */
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      padding: 8px;
+    }
+    .hamburger span {
+      display: block;
+      width: 22px; height: 2px;
+      background: var(--silver);
+      transition: all 0.3s ease;
+    }
+    .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* Mobile nav */
+    .mobile-menu {
+      display: none;
+      position: fixed;
+      top: 68px; left: 0; right: 0;
+      background: rgba(0,0,0,0.97);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem;
+      flex-direction: column;
+      gap: 4px;
+      z-index: 99;
+    }
+    .mobile-menu.open { display: flex; }
+    .mobile-menu .nav-tab { width: 100%; text-align: center; }
+
+    /* ═══════════════════════════════════════════════════════════
+       MAIN CONTENT AREA
+    ═══════════════════════════════════════════════════════════ */
+    .main {
+      padding-top: 68px;
+      min-height: 100vh;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       HERO HEADER
+    ═══════════════════════════════════════════════════════════ */
+    .hero {
+      padding: 3.5rem 2rem 2rem;
+      text-align: center;
+      position: relative;
+    }
+    .hero-label {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 4px;
+      color: var(--crimson);
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 900;
+      letter-spacing: 2px;
+      line-height: 1.1;
+      color: var(--white);
+      margin-bottom: 0.5rem;
+    }
+    .hero-title span { color: var(--crimson); text-shadow: var(--glow-sm); }
+    .hero-sub {
+      font-size: 0.95rem;
+      color: var(--silver);
+      letter-spacing: 0.5px;
+      max-width: 560px;
+      margin: 0 auto 1.5rem;
+    }
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 3rem;
+      flex-wrap: wrap;
+    }
+    .stat-chip {
+      text-align: center;
+    }
+    .stat-chip-value {
+      font-family: var(--font-mono);
+      font-size: 1.4rem;
+      color: var(--crimson);
+      font-weight: 700;
+    }
+    .stat-chip-label {
+      font-size: 0.72rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--dim);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       PAGE VIEWS (tab routing)
+    ═══════════════════════════════════════════════════════════ */
+    .page { display: none; padding: 1.5rem 2rem 4rem; max-width: 1400px; margin: 0 auto; }
+    .page.active { display: block; }
+    .page-header {
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .page-title {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--white);
+    }
+    .page-title span { color: var(--crimson); }
+
+    /* ═══════════════════════════════════════════════════════════
+       GLASSMORPHIC CARDS
+    ═══════════════════════════════════════════════════════════ */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 1.5rem;
+      transition: border-color 0.25s, box-shadow 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(127,29,29,0.06) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .card:hover {
+      border-color: var(--border-glow);
+      box-shadow: var(--glow-sm);
+    }
+    .card-glow {
+      border-color: rgba(220,38,38,0.3);
+      box-shadow: 0 0 0 1px rgba(220,38,38,0.1), var(--glow-sm);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       METRIC CARDS
+    ═══════════════════════════════════════════════════════════ */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .metric-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 1.25rem 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .metric-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--crimson), transparent);
+    }
+    .metric-label {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .metric-value {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--white);
+      line-height: 1;
+      margin-bottom: 0.25rem;
+    }
+    .metric-change {
+      font-size: 0.8rem;
+      color: #22c55e;
+    }
+    .metric-change.down { color: var(--crimson); }
+
+    /* ═══════════════════════════════════════════════════════════
+       BUTTONS
+    ═══════════════════════════════════════════════════════════ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--crimson-dim), var(--crimson));
+      color: var(--white);
+      border: 1px solid var(--crimson);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, var(--crimson), #ef4444);
+      box-shadow: var(--glow-md);
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background: rgba(127,29,29,0.15);
+      color: var(--crimson);
+      border: 1px solid var(--border-glow);
+    }
+    .btn-secondary:hover {
+      background: rgba(127,29,29,0.3);
+      box-shadow: var(--glow-sm);
+    }
+    .btn-ghost {
+      color: var(--silver);
+      border: 1px solid var(--border);
+      background: transparent;
+    }
+    .btn-ghost:hover {
+      color: var(--white);
+      border-color: var(--silver);
+    }
+    .btn-sm { padding: 7px 14px; font-size: 0.78rem; }
+    .btn-lg { padding: 14px 28px; font-size: 0.95rem; }
+    .btn-full { width: 100%; }
+
+    /* ═══════════════════════════════════════════════════════════
+       FORMS / INPUTS
+    ═══════════════════════════════════════════════════════════ */
+    .form-group { margin-bottom: 1.25rem; }
+    .form-label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--silver);
+      margin-bottom: 0.5rem;
+    }
+    .form-input {
+      width: 100%;
+      padding: 12px 14px;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--white);
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+    .form-input:focus {
+      border-color: var(--border-glow);
+      box-shadow: 0 0 0 2px rgba(220,38,38,0.15);
+    }
+    .form-input::placeholder { color: var(--dim); }
+    .form-select {
+      width: 100%;
+      padding: 12px 14px;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--white);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+    }
+
+    /* Tooltip */
+    .tooltip-wrap { position: relative; display: inline-flex; align-items: center; }
+    .tooltip-icon {
+      width: 16px; height: 16px;
+      border: 1px solid var(--dim);
+      border-radius: 50%;
+      font-size: 0.65rem;
+      color: var(--dim);
+      display: inline-flex; align-items: center; justify-content: center;
+      cursor: help;
+      margin-left: 4px;
+      transition: all 0.2s;
+    }
+    .tooltip-icon:hover { border-color: var(--crimson); color: var(--crimson); }
+    .tooltip-box {
+      display: none;
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      width: 200px;
+      background: rgba(10,0,0,0.97);
+      border: 1px solid var(--border-glow);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 0.78rem;
+      color: var(--silver);
+      z-index: 200;
+      white-space: normal;
+      box-shadow: var(--glow-sm);
+    }
+    .tooltip-wrap:hover .tooltip-box { display: block; }
+
+    /* ═══════════════════════════════════════════════════════════
+       ── PAGE 1: NFT MARKETPLACE ──
+    ═══════════════════════════════════════════════════════════ */
+    .filter-bar {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+    .filter-bar .form-select { width: auto; min-width: 140px; }
+    .filter-bar .form-input { width: auto; min-width: 180px; }
+
+    .nft-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.25rem;
+    }
+    .nft-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    .nft-card:hover {
+      border-color: var(--border-glow);
+      box-shadow: var(--glow-md);
+      transform: translateY(-3px);
+    }
+    .nft-art {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .nft-art-bg {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--maroon-deep), rgba(0,0,0,0.8));
+    }
+    .nft-art-emoji { position: relative; z-index: 1; }
+    .nft-art-id {
+      position: absolute;
+      top: 8px; right: 10px;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.3);
+      z-index: 1;
+    }
+    .nft-info { padding: 1rem; }
+    .nft-collection {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--crimson);
+      margin-bottom: 4px;
+    }
+    .nft-name {
+      font-family: var(--font-body);
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--white);
+      margin-bottom: 8px;
+    }
+    .nft-price-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 10px;
+    }
+    .nft-price {
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--white);
+    }
+    .nft-floor {
+      font-size: 0.72rem;
+      color: var(--dim);
+    }
+    .nft-btn-row { display: flex; gap: 8px; }
+
+    /* Floor Price Badge */
+    .floor-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: rgba(220,38,38,0.1);
+      border: 1px solid rgba(220,38,38,0.3);
+      border-radius: 20px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--crimson);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       ── PAGE 2: LENDING ──
+    ═══════════════════════════════════════════════════════════ */
+    .lending-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+    .lending-section-title {
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--crimson);
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .asset-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 0.75rem;
+      transition: all 0.2s;
+    }
+    .asset-row:hover { border-color: var(--border-glow); background: rgba(127,29,29,0.08); }
+    .asset-icon {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--maroon), var(--crimson-dim));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .asset-info { flex: 1; }
+    .asset-name { font-weight: 700; font-size: 0.95rem; }
+    .asset-sub { font-size: 0.78rem; color: var(--silver); }
+    .asset-apy {
+      font-family: var(--font-mono);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #22c55e;
+      text-align: right;
+    }
+    .asset-apy-label { font-size: 0.65rem; color: var(--dim); text-align: right; letter-spacing: 1px; }
+
+    /* LTV Health Bar */
+    .health-bar-wrap { margin-top: 1rem; }
+    .health-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      color: var(--silver);
+      margin-bottom: 6px;
+    }
+    .health-bar-track {
+      height: 8px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .health-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, #22c55e, #84cc16);
+      transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+    }
+    .health-bar-fill.warn { background: linear-gradient(90deg, #f59e0b, #eab308); }
+    .health-bar-fill.danger { background: linear-gradient(90deg, var(--crimson-dim), var(--crimson)); }
+
+    /* Flash Loan info modal button */
+    .info-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: rgba(220,38,38,0.08);
+      border: 1px solid rgba(220,38,38,0.25);
+      border-radius: 20px;
+      font-size: 0.78rem;
+      color: var(--silver);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .info-chip:hover { border-color: var(--crimson); color: var(--white); }
+
+    /* ═══════════════════════════════════════════════════════════
+       ── PAGE 3: DAO HUB ──
+    ═══════════════════════════════════════════════════════════ */
+    .dao-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; }
+    .proposal-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      transition: all 0.2s;
+    }
+    .proposal-card:hover { border-color: var(--border-glow); box-shadow: var(--glow-sm); }
+    .proposal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+      gap: 1rem;
+    }
+    .proposal-title { font-weight: 700; font-size: 1rem; color: var(--white); }
+    .proposal-meta { font-size: 0.75rem; color: var(--dim); margin-top: 3px; font-family: var(--font-mono); }
+    .proposal-badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .badge-active { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.4); color: #22c55e; }
+    .badge-passed { background: rgba(220,38,38,0.12); border: 1px solid var(--border-glow); color: var(--crimson); }
+    .badge-pending { background: rgba(161,161,170,0.1); border: 1px solid var(--border); color: var(--silver); }
+
+    /* Voting progress bars */
+    .vote-bars { margin: 1rem 0; }
+    .vote-row { margin-bottom: 8px; }
+    .vote-row-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--silver);
+      margin-bottom: 4px;
+    }
+    .vote-track {
+      height: 10px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    .vote-fill-yes {
+      height: 100%;
+      border-radius: 5px;
+      background: linear-gradient(90deg, var(--maroon), var(--crimson));
+      transition: width 1s ease;
+    }
+    .vote-fill-no {
+      height: 100%;
+      border-radius: 5px;
+      background: rgba(100,100,100,0.4);
+      transition: width 1s ease;
+    }
+    .vote-actions { display: flex; gap: 8px; margin-top: 1rem; }
+
+    /* Treasury card */
+    .treasury-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem;
+    }
+    .treasury-balance {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--crimson);
+      text-shadow: var(--glow-sm);
+      margin: 0.75rem 0;
+    }
+
+    /* DAO list */
+    .dao-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .dao-item:hover { border-color: var(--border-glow); background: rgba(127,29,29,0.08); }
+    .dao-avatar {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--maroon-deep), var(--maroon));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .dao-name { font-weight: 600; font-size: 0.9rem; }
+    .dao-members { font-size: 0.72rem; color: var(--dim); }
+
+    /* ═══════════════════════════════════════════════════════════
+       MODALS
+    ═══════════════════════════════════════════════════════════ */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(4px);
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: rgba(8,0,0,0.97);
+      border: 1px solid var(--border-glow);
+      border-radius: 12px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: var(--glow-lg);
+      position: relative;
+      animation: modalIn 0.2s ease;
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.96) translateY(8px); }
+      to   { opacity: 1; transform: none; }
+    }
+    .modal-title {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--white);
+      margin-bottom: 1.5rem;
+    }
+    .modal-close {
+      position: absolute;
+      top: 1.25rem; right: 1.25rem;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      color: var(--dim);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .modal-close:hover { border-color: var(--crimson); color: var(--crimson); }
+
+    /* ═══════════════════════════════════════════════════════════
+       TOAST NOTIFICATIONS
+    ═══════════════════════════════════════════════════════════ */
+    .toast-container {
+      position: fixed;
+      bottom: 2rem; right: 2rem;
+      z-index: 500;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      background: rgba(8,0,0,0.97);
+      border: 1px solid var(--border-glow);
+      border-radius: 10px;
+      box-shadow: var(--glow-md);
+      font-size: 0.88rem;
+      color: var(--white);
+      min-width: 280px;
+      pointer-events: auto;
+      animation: toastIn 0.3s ease, toastOut 0.3s ease 3.7s forwards;
+    }
+    @keyframes toastIn  { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: none; } }
+    @keyframes toastOut { to   { opacity: 0; transform: translateX(20px); } }
+    .toast-icon { font-size: 1.1rem; flex-shrink: 0; }
+    .toast-body { flex: 1; }
+    .toast-title { font-weight: 700; color: var(--crimson); font-size: 0.78rem; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 2px; }
+    .toast-msg { color: var(--silver); font-size: 0.82rem; }
+    .toast-pending .toast-icon::before { content: '⏳'; }
+    .toast-success .toast-icon::before { content: '✅'; }
+    .toast-error .toast-icon::before { content: '❌'; }
+
+    /* ═══════════════════════════════════════════════════════════
+       HELP / FAQ FOOTER
+    ═══════════════════════════════════════════════════════════ */
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem;
+      margin-top: 2rem;
+    }
+    .faq-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; }
+    .faq-item { }
+    .faq-q {
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--white);
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .faq-q::before {
+      content: '';
+      display: block;
+      width: 3px; height: 14px;
+      background: var(--crimson);
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    .faq-a { font-size: 0.83rem; color: var(--silver); line-height: 1.5; }
+    .footer-bottom {
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(127,29,29,0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--dim);
+    }
+    .footer-links { display: flex; gap: 1.5rem; }
+    .footer-links a:hover { color: var(--crimson); }
+
+    /* Divider */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+      margin: 1.5rem 0;
+    }
+
+    /* Badge */
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      background: rgba(127,29,29,0.2);
+      border: 1px solid rgba(127,29,29,0.4);
+      border-radius: 4px;
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--crimson);
+    }
+    .tag.green { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.3); color: #22c55e; }
+
+    /* Scroll indicator */
+    .live-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 8px #22c55e;
+      animation: pulse 2s infinite;
+      flex-shrink: 0;
+    }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(1.3)} }
+
+    /* ═══════════════════════════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════════════════════════ */
+    @media (max-width: 1024px) {
+      .nft-grid { grid-template-columns: repeat(3, 1fr); }
+      .lending-grid { grid-template-columns: 1fr; }
+      .dao-layout { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .nav-tabs { display: none; }
+      .hamburger { display: flex; }
+      .nav { padding: 0 1rem; }
+      .nft-grid { grid-template-columns: repeat(2, 1fr); }
+      .metrics-row { grid-template-columns: 1fr 1fr; }
+      .page { padding: 1rem 1rem 3rem; }
+      .hero { padding: 2rem 1rem 1.5rem; }
+      .hero-stats { gap: 1.5rem; }
+    }
+    @media (max-width: 480px) {
+      .nft-grid { grid-template-columns: 1fr; }
+      .metrics-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Matrix Rain Canvas -->
+<canvas id="matrix-canvas"></canvas>
+
+<div id="app">
+  <!-- ══════════════════════════════════════════════
+       NAVIGATION
+  ══════════════════════════════════════════════ -->
+  <nav class="nav">
+    <div class="nav-logo">
+      <div class="nav-logo-icon">⚡</div>
+      STREAK<span>://</span>
+    </div>
+
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="setPage('market')">NFT Market</button>
+      <button class="nav-tab" onclick="setPage('lending')">Lending</button>
+      <button class="nav-tab" onclick="setPage('dao')">DAO Hub</button>
+    </div>
+
+    <div class="nav-right">
+      <button id="wallet-btn" class="btn-wallet" onclick="connectWallet()">
+        Connect Wallet
+      </button>
+      <button class="hamburger" id="hamburger" onclick="toggleMenu()">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" id="mobile-menu">
+    <button class="nav-tab" onclick="setPage('market');toggleMenu()">NFT Market</button>
+    <button class="nav-tab" onclick="setPage('lending');toggleMenu()">Lending</button>
+    <button class="nav-tab" onclick="setPage('dao');toggleMenu()">DAO Hub</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       MAIN
+  ══════════════════════════════════════════════ -->
+  <main class="main">
+
+    <!-- HERO (shown only on market page) -->
+    <div id="hero-section" class="hero">
+      <div class="hero-label">⬡ Bitcoin Layer 1 DeFi Protocol</div>
+      <h1 class="hero-title">SECY <span>PROTOCOL</span></h1>
+      <p class="hero-sub">The premier all-in-one DeFi super-app on OP_NET. Trade NFT artifacts, lend assets, and govern DAOs — all on Bitcoin L1.</p>
+      <div class="hero-stats">
+        <div class="stat-chip">
+          <div class="stat-chip-value">$4.8M</div>
+          <div class="stat-chip-label">Total Value Locked</div>
+        </div>
+        <div class="stat-chip">
+          <div class="stat-chip-value">2,847</div>
+          <div class="stat-chip-label">NFTs Listed</div>
+        </div>
+        <div class="stat-chip">
+          <div class="stat-chip-value">14</div>
+          <div class="stat-chip-label">Active DAOs</div>
+        </div>
+        <div class="stat-chip">
+          <div class="stat-chip-value">8.2%</div>
+          <div class="stat-chip-label">Max Supply APY</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ╔══════════════════════════════════════════╗
+         ║  PAGE: NFT MARKETPLACE                  ║
+         ╚══════════════════════════════════════════╝ -->
+    <div id="page-market" class="page active" style="max-width:1400px;margin:0 auto;padding:1.5rem 2rem 4rem;">
+      <div class="page-header">
+        <div>
+          <div class="page-title">NFT <span>Market</span></div>
+          <div style="font-size:0.78rem;color:var(--dim);margin-top:4px;font-family:var(--font-mono);">
+            OP_721 Artifacts on Bitcoin L1
+            <span style="margin:0 8px">•</span>
+            <span class="floor-badge">
+              <span class="live-dot"></span> Floor: 0.0042 BTC
+              <span class="tooltip-wrap">
+                <span class="tooltip-icon">?</span>
+                <span class="tooltip-box">The lowest listed price in this collection. Useful as a benchmark for fair market value.</span>
+              </span>
+            </span>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('list-modal')">+ List Item</button>
+      </div>
+
+      <!-- Filters -->
+      <div class="filter-bar">
+        <select class="form-select" onchange="filterNFTs()">
+          <option>All Collections</option>
+          <option>Secy Genesis</option>
+          <option>BTC Punks</option>
+          <option>Ordinal Apes</option>
+        </select>
+        <select class="form-select">
+          <option>All Chains</option>
+          <option>Bitcoin L1</option>
+          <option>OP_NET</option>
+        </select>
+        <select class="form-select" id="price-sort" onchange="filterNFTs()">
+          <option>Sort: Default</option>
+          <option>Price: Low → High</option>
+          <option>Price: High → Low</option>
+          <option>Recently Listed</option>
+        </select>
+        <input class="form-input" placeholder="🔍  Search by name or ID..." style="flex:1;min-width:200px;" oninput="filterNFTs()" id="nft-search" />
+      </div>
+
+      <!-- NFT Grid -->
+      <div class="nft-grid" id="nft-grid">
+        <!-- Generated by JS -->
+      </div>
+    </div>
+
+    <!-- ╔══════════════════════════════════════════╗
+         ║  PAGE: LENDING PLATFORM                 ║
+         ╚══════════════════════════════════════════╝ -->
+    <div id="page-lending" class="page" style="max-width:1400px;margin:0 auto;padding:1.5rem 2rem 4rem;">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Lending <span>Platform</span></div>
+          <div style="font-size:0.78rem;color:var(--dim);margin-top:4px;font-family:var(--font-mono);">SecyLend Pool — OP_20 Liquidity Protocol</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <span class="info-chip" onclick="openModal('flash-modal')">⚡ Flash Loans <span style="font-size:0.8rem;">›</span></span>
+          <button class="btn btn-ghost btn-sm" onclick="openModal('borrow-modal')">Borrow Against NFT</button>
+        </div>
+      </div>
+
+      <!-- Metric Cards -->
+      <div class="metrics-row">
+        <div class="metric-card">
+          <div class="metric-label">
+            Current APY
+            <span class="tooltip-wrap">
+              <span class="tooltip-icon">?</span>
+              <span class="tooltip-box">Annual Percentage Yield — the annualised return on your supplied assets, scaled by pool utilisation.</span>
+            </span>
+          </div>
+          <div class="metric-value" style="color:#22c55e;">8.24%</div>
+          <div class="metric-change">+0.12% today</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">
+            Total Value Locked
+            <span class="tooltip-wrap">
+              <span class="tooltip-icon">?</span>
+              <span class="tooltip-box">Total assets deposited into the SecyLend pool, denominated in USD.</span>
+            </span>
+          </div>
+          <div class="metric-value">$4.8M</div>
+          <div class="metric-change">+3.2% (7d)</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">
+            Borrow APY
+          </div>
+          <div class="metric-value" style="color:var(--crimson);">12.5%</div>
+          <div class="metric-change down">Base rate: 5%</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">
+            Utilisation Rate
+            <span class="tooltip-wrap">
+              <span class="tooltip-icon">?</span>
+              <span class="tooltip-box">Percentage of supplied assets currently out on loan. Higher utilisation → higher APY for suppliers.</span>
+            </span>
+          </div>
+          <div class="metric-value">67%</div>
+          <div class="metric-change">Healthy range</div>
+        </div>
+      </div>
+
+      <!-- Lending panels -->
+      <div class="lending-grid">
+        <!-- Supply Panel -->
+        <div class="card">
+          <div class="lending-section-title">⬆ Supply Assets</div>
+
+          <div class="asset-row">
+            <div class="asset-icon">₿</div>
+            <div class="asset-info">
+              <div class="asset-name">sBTC</div>
+              <div class="asset-sub">Available: 0.2840 sBTC</div>
+            </div>
+            <div>
+              <div class="asset-apy">8.24%</div>
+              <div class="asset-apy-label">Supply APY</div>
+            </div>
+          </div>
+          <div class="asset-row">
+            <div class="asset-icon">◎</div>
+            <div class="asset-info">
+              <div class="asset-name">MOTO</div>
+              <div class="asset-sub">Available: 1,200 MOTO</div>
+            </div>
+            <div>
+              <div class="asset-apy">6.78%</div>
+              <div class="asset-apy-label">Supply APY</div>
+            </div>
+          </div>
+          <div class="asset-row">
+            <div class="asset-icon">🔷</div>
+            <div class="asset-info">
+              <div class="asset-name">USDC.b</div>
+              <div class="asset-sub">Available: $1,500</div>
+            </div>
+            <div>
+              <div class="asset-apy">5.12%</div>
+              <div class="asset-apy-label">Supply APY</div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="form-group">
+            <label class="form-label">Amount to Supply</label>
+            <input class="form-input" type="number" placeholder="0.00" id="supply-amount" />
+          </div>
+          <button class="btn btn-primary btn-full" onclick="doTx('supply')">Supply Assets</button>
+        </div>
+
+        <!-- Borrow Panel -->
+        <div class="card">
+          <div class="lending-section-title">⬇ Borrow Assets</div>
+
+          <div class="asset-row">
+            <div class="asset-icon">₿</div>
+            <div class="asset-info">
+              <div class="asset-name">sBTC</div>
+              <div class="asset-sub">Liquidity: 1.24 BTC</div>
+            </div>
+            <div>
+              <div class="asset-apy" style="color:var(--crimson);">12.5%</div>
+              <div class="asset-apy-label">Borrow APY</div>
+            </div>
+          </div>
+
+          <!-- Loan Health -->
+          <div class="metric-card" style="margin:1rem 0;">
+            <div class="metric-label">
+              Loan Health (LTV)
+              <span class="tooltip-wrap">
+                <span class="tooltip-icon">?</span>
+                <span class="tooltip-box">Loan-to-Value ratio: how much of your collateral is currently borrowed against. Above 75% risks liquidation.</span>
+              </span>
+            </div>
+            <div class="metric-value" style="font-size:1.2rem;">52% <span style="font-size:0.8rem;color:#22c55e;">● Safe</span></div>
+            <div class="health-bar-wrap">
+              <div class="health-bar-label"><span>0%</span><span>Liquidation at 75%</span><span>100%</span></div>
+              <div class="health-bar-track">
+                <div class="health-bar-fill" id="ltv-bar" style="width:52%"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Collateral to Post</label>
+            <input class="form-input" type="number" placeholder="0.00" id="collateral-amount" oninput="updateLTV()" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Borrow Amount</label>
+            <input class="form-input" type="number" placeholder="0.00" id="borrow-amount" oninput="updateLTV()" />
+          </div>
+          <button class="btn btn-secondary btn-full" onclick="doTx('borrow')">Borrow Assets</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ╔══════════════════════════════════════════╗
+         ║  PAGE: DAO HUB                          ║
+         ╚══════════════════════════════════════════╝ -->
+    <div id="page-dao" class="page" style="max-width:1400px;margin:0 auto;padding:1.5rem 2rem 4rem;">
+      <div class="page-header">
+        <div>
+          <div class="page-title">DAO <span>Hub</span></div>
+          <div style="font-size:0.78rem;color:var(--dim);margin-top:4px;font-family:var(--font-mono);">On-chain Governance — SecyDAO Protocol</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('create-dao-modal')">+ Create DAO</button>
+      </div>
+
+      <div class="dao-layout">
+        <!-- Proposals Column -->
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+            <h3 style="font-family:var(--font-display);font-size:0.9rem;letter-spacing:2px;color:var(--silver);">ACTIVE PROPOSALS</h3>
+            <button class="btn btn-secondary btn-sm" onclick="openModal('proposal-modal')">+ New Proposal</button>
+          </div>
+
+          <div id="proposals-list">
+            <!-- Generated by JS -->
+          </div>
+        </div>
+
+        <!-- Sidebar: Treasury + DAO list -->
+        <div>
+          <!-- Treasury -->
+          <div class="treasury-card" style="margin-bottom:1.5rem;">
+            <div style="font-family:var(--font-mono);font-size:0.65rem;letter-spacing:2px;color:var(--dim);text-transform:uppercase;">Protocol Treasury</div>
+            <div class="treasury-balance" id="treasury-display">$1,240,800</div>
+            <div style="font-size:0.78rem;color:var(--silver);margin-bottom:1rem;">Across 14 active DAOs</div>
+
+            <div class="health-bar-wrap">
+              <div class="health-bar-label"><span>Runway</span><span>18 months</span></div>
+              <div class="health-bar-track">
+                <div class="health-bar-fill" style="width:68%"></div>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+            <button class="btn btn-ghost btn-sm btn-full" onclick="doTx('treasury')">Deposit to Treasury</button>
+          </div>
+
+          <!-- DAO List -->
+          <div>
+            <div style="font-family:var(--font-mono);font-size:0.65rem;letter-spacing:2px;color:var(--dim);text-transform:uppercase;margin-bottom:1rem;">ACTIVE DAOS</div>
+            <div id="dao-list">
+              <!-- Generated by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         HELP / FAQ FOOTER
+    ══════════════════════════════════════════ -->
+    <footer class="footer">
+      <div style="max-width:1400px;margin:0 auto;">
+        <div style="font-family:var(--font-display);font-size:0.85rem;letter-spacing:3px;color:var(--silver);text-transform:uppercase;margin-bottom:1.5rem;">
+          Help & FAQ
+        </div>
+        <div class="faq-grid">
+          <div class="faq-item">
+            <div class="faq-q">What is OP_NET?</div>
+            <div class="faq-a">OP_NET is a smart-contract layer running directly on Bitcoin L1, enabling trustless DeFi without bridges or sidechains.</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q">How do I connect my wallet?</div>
+            <div class="faq-a">Click "Connect OP_WALLET" in the top-right corner. Secy Protocol uses the official OP_WALLET browser extension for all transaction signing.</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q">What is Floor Price?</div>
+            <div class="faq-a">The lowest active listing price in a collection. It reflects the minimum you'd pay to instantly acquire any item from that collection.</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q">What is APY?</div>
+            <div class="faq-a">Annual Percentage Yield — the yearly interest rate you earn on supplied assets, compounding linearly per block.</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q">What is LTV?</div>
+            <div class="faq-a">Loan-to-Value ratio. If your LTV exceeds 75%, your position may be liquidated to protect the pool. Keep it below 60% for safety.</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q">How do Flash Loans work?</div>
+            <div class="faq-a">Borrow any amount within a single block with zero collateral — as long as you return it plus a 0.09% fee in the same transaction.</div>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          <div>SECY PROTOCOL v1.0.0 — Built for OP_NET Vibecoding Challenge Week 3</div>
+          <div class="footer-links">
+            <a href="#">Docs</a>
+            <a href="#">GitHub</a>
+            <a href="#">Audit</a>
+            <a href="#">Discord</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </main>
+</div>
+
+<!-- ══════════════════════════════════════════
+     MODALS
+══════════════════════════════════════════ -->
+
+<!-- List NFT Modal -->
+<div class="modal-overlay" id="list-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('list-modal')">✕</button>
+    <div class="modal-title">LIST ARTIFACT</div>
+    <div class="form-group">
+      <label class="form-label">NFT Contract Address</label>
+      <input class="form-input" placeholder="bc1p..." />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Token ID</label>
+      <input class="form-input" type="number" placeholder="0" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">List Price (BTC)</label>
+      <input class="form-input" type="number" placeholder="0.0000" step="0.0001" />
+    </div>
+    <div class="divider"></div>
+    <button class="btn btn-primary btn-full" onclick="doTx('list');closeModal('list-modal')">Sign & List on OP_NET</button>
+  </div>
+</div>
+
+<!-- Flash Loans Info Modal -->
+<div class="modal-overlay" id="flash-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('flash-modal')">✕</button>
+    <div class="modal-title">⚡ FLASH LOANS</div>
+    <div style="color:var(--silver);font-size:0.88rem;line-height:1.7;">
+      <p style="margin-bottom:1rem;">Flash loans allow you to borrow any amount of liquidity from the SecyLend pool <strong style="color:var(--white)">within a single Bitcoin block</strong>, with zero collateral required.</p>
+      <div class="card" style="margin-bottom:1rem;padding:1rem;">
+        <div style="font-family:var(--font-mono);font-size:0.7rem;letter-spacing:1px;color:var(--crimson);margin-bottom:8px;">HOW IT WORKS</div>
+        <div style="font-size:0.82rem;line-height:1.8;">
+          1. Borrow up to pool liquidity in one call<br>
+          2. Execute your arbitrage / liquidation logic<br>
+          3. Return funds + 0.09% fee in the same tx<br>
+          4. If repayment fails → tx reverts completely
+        </div>
+      </div>
+      <p style="font-size:0.78rem;color:var(--dim);">⚠ Flash loans are an advanced feature designed for developers and arbitrageurs. Improper use will result in full transaction reversion and loss of gas fees.</p>
+    </div>
+    <div class="divider"></div>
+    <button class="btn btn-secondary btn-full">View Flash Loan API Docs →</button>
+  </div>
+</div>
+
+<!-- Borrow Against NFT Modal -->
+<div class="modal-overlay" id="borrow-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('borrow-modal')">✕</button>
+    <div class="modal-title">NFT COLLATERAL</div>
+    <div style="color:var(--silver);font-size:0.85rem;margin-bottom:1.5rem;line-height:1.6;">
+      NFT collateral architecture is prepared and will activate in SecyLend v1.1 with OP_721 pricing oracle integration.
+    </div>
+    <div class="card" style="padding:1rem;text-align:center;border-style:dashed;">
+      <div style="font-size:2rem;margin-bottom:0.5rem;">🔒</div>
+      <div style="font-size:0.82rem;color:var(--dim);">Coming in v1.1 — NFT oracle price feeds required</div>
+    </div>
+    <div class="divider"></div>
+    <button class="btn btn-ghost btn-full" onclick="closeModal('borrow-modal')">Close</button>
+  </div>
+</div>
+
+<!-- Create Proposal Modal -->
+<div class="modal-overlay" id="proposal-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('proposal-modal')">✕</button>
+    <div class="modal-title">NEW PROPOSAL</div>
+    <div class="form-group">
+      <label class="form-label">Proposal Title</label>
+      <input class="form-input" placeholder="e.g. Increase supply APY to 10%" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <textarea class="form-input" rows="3" placeholder="Describe the proposal and its impact..." style="resize:vertical;"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Voting Duration (blocks, default 144)</label>
+      <input class="form-input" type="number" placeholder="144" value="144" />
+    </div>
+    <div class="divider"></div>
+    <button class="btn btn-primary btn-full" onclick="doTx('proposal');closeModal('proposal-modal')">Submit On-Chain Proposal</button>
+  </div>
+</div>
+
+<!-- Create DAO Modal -->
+<div class="modal-overlay" id="create-dao-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('create-dao-modal')">✕</button>
+    <div class="modal-title">CREATE DAO</div>
+    <div class="form-group">
+      <label class="form-label">DAO Name</label>
+      <input class="form-input" placeholder="e.g. Secy Builders Guild" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Governance Token Address</label>
+      <input class="form-input" placeholder="bc1p..." />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Quorum (%)</label>
+      <input class="form-input" type="number" placeholder="5" min="1" max="100" value="5" />
+    </div>
+    <div class="divider"></div>
+    <button class="btn btn-primary btn-full" onclick="doTx('create-dao');closeModal('create-dao-modal')">Deploy DAO On-Chain</button>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- ══════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════ -->
+<script>
+// ─────────────────────────────────────────
+// MATRIX RAIN EFFECT
+// ─────────────────────────────────────────
+(function() {
+  const canvas = document.getElementById('matrix-canvas');
+  const ctx = canvas.getContext('2d');
+
+  // Code characters: mix of ASCII, code symbols, katakana
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%^&*()_+-=[]{}|;:,.<>?/\\ｦｧｨｩｪｫｬｭｮｯｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ';
+  const charArr = chars.split('');
+
+  const FONT_SIZE = 13;
+  let cols, drops;
+
+  const crimsonShades = [
+    '#450a0a','#7f1d1d','#991b1b','#b91c1c','#dc2626','#ef4444',
+    '#450a0a','#7f1d1d','#991b1b',
+  ];
+
+  function resize() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+    cols  = Math.floor(canvas.width / FONT_SIZE);
+    drops = Array(cols).fill(1).map(() => Math.random() * -100);
+  }
+
+  function draw() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.055)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    for (let i = 0; i < cols; i++) {
+      const char = charArr[Math.floor(Math.random() * charArr.length)];
+      const shade = crimsonShades[Math.floor(Math.random() * crimsonShades.length)];
+
+      // Leading char brighter
+      if (drops[i] * FONT_SIZE > 0 && Math.random() > 0.95) {
+        ctx.fillStyle = '#ff4444';
+      } else {
+        ctx.fillStyle = shade;
+      }
+
+      ctx.font = `${FONT_SIZE}px 'Share Tech Mono', monospace`;
+      ctx.fillText(char, i * FONT_SIZE, drops[i] * FONT_SIZE);
+
+      // Reset randomly
+      if (drops[i] * FONT_SIZE > canvas.height && Math.random() > 0.975) {
+        drops[i] = 0;
+      }
+      drops[i] += 0.5 + Math.random() * 0.5;
+    }
+  }
+
+  resize();
+  window.addEventListener('resize', resize);
+  setInterval(draw, 45);
+})();
+
+// ─────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────
+let walletConnected = false;
+let walletAddress = '';
+let currentPage = 'market';
+
+// ─────────────────────────────────────────
+// NAVIGATION
+// ─────────────────────────────────────────
+function setPage(page) {
+  currentPage = page;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(`page-${page}`).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t => {
+    if (t.textContent.toLowerCase().includes(page === 'market' ? 'nft' : page)) {
+      t.classList.add('active');
+    }
+  });
+  // Show hero only on market
+  document.getElementById('hero-section').style.display = page === 'market' ? 'block' : 'none';
+}
+
+function toggleMenu() {
+  const menu = document.getElementById('mobile-menu');
+  const btn  = document.getElementById('hamburger');
+  menu.classList.toggle('open');
+  btn.classList.toggle('open');
+}
+
+// ─────────────────────────────────────────
+// WALLET CONNECT
+// ─────────────────────────────────────────
+function connectWallet() {
+  const btn = document.getElementById('wallet-btn');
+  if (walletConnected) {
+    walletConnected = false;
+    walletAddress = '';
+    btn.textContent = 'Connect OP_WALLET';
+    btn.classList.remove('connected');
+    showToast('info', 'Wallet Disconnected', 'OP_WALLET session ended.');
+    return;
+  }
+
+  showToast('pending', 'Connecting...', 'Awaiting OP_WALLET signature…');
+  setTimeout(() => {
+    walletConnected = true;
+    walletAddress = 'bc1p' + Math.random().toString(36).slice(2, 8) + '…' + Math.random().toString(36).slice(2, 6);
+    btn.textContent = walletAddress;
+    btn.classList.add('connected');
+    showToast('success', 'Wallet Connected', `0.284 BTC • 1,200 MOTO`);
+  }, 1400);
+}
+
+// ─────────────────────────────────────────
+// MODALS
+// ─────────────────────────────────────────
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+// Close on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('open');
+  });
+});
+
+// ─────────────────────────────────────────
+// TOAST NOTIFICATIONS
+// ─────────────────────────────────────────
+function showToast(type, title, msg) {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type === 'info' ? 'success' : type}`;
+  toast.innerHTML = `
+    <div class="toast-icon"></div>
+    <div class="toast-body">
+      <div class="toast-title">${title}</div>
+      <div class="toast-msg">${msg}</div>
+    </div>
+  `;
+  if (type === 'pending') toast.querySelector('.toast-icon').textContent = '⏳';
+  else if (type === 'success') toast.querySelector('.toast-icon').textContent = '✅';
+  else if (type === 'error') toast.querySelector('.toast-icon').textContent = '❌';
+  else toast.querySelector('.toast-icon').textContent = 'ℹ️';
+
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 4200);
+}
+
+// ─────────────────────────────────────────
+// SIMULATED TRANSACTIONS
+// ─────────────────────────────────────────
+function doTx(type) {
+  if (!walletConnected) {
+    showToast('error', 'Wallet Required', 'Connect OP_WALLET to continue.');
+    return;
+  }
+  const msgs = {
+    supply:     ['Transaction Pending', 'Asset Supplied Successfully — earning 8.24% APY'],
+    borrow:     ['Transaction Pending', 'Assets Borrowed — monitor your LTV'],
+    list:       ['Listing Pending', 'NFT Listed on SecyMarket ✓'],
+    buy:        ['Transaction Pending', 'NFT Purchased Successfully'],
+    proposal:   ['Proposal Pending', 'Governance Proposal Submitted On-Chain'],
+    treasury:   ['Deposit Pending', 'Treasury Deposit Confirmed'],
+    'create-dao':['DAO Deploying', 'DAO Created and On-Chain ✓'],
+    vote:       ['Vote Pending', 'Vote Cast Successfully'],
+  };
+  const [pendingMsg, successMsg] = msgs[type] || ['Pending', 'Transaction Confirmed'];
+  showToast('pending', 'Transaction Pending', pendingMsg);
+  setTimeout(() => showToast('success', 'Success', successMsg), 2200);
+}
+
+// ─────────────────────────────────────────
+// NFT DATA + GRID
+// ─────────────────────────────────────────
+const nftData = [
+  { id:1, name:'Secy Genesis #001', collection:'Secy Genesis', price:'0.0420', floor:'0.0042', emoji:'🔥', rarity:'Legendary' },
+  { id:2, name:'BTC Punk #2048',      collection:'BTC Punks',      price:'0.0120', floor:'0.0080', emoji:'👾', rarity:'Rare' },
+  { id:3, name:'Ordinal Ape #512',    collection:'Ordinal Apes',   price:'0.0088', floor:'0.0060', emoji:'🦍', rarity:'Uncommon' },
+  { id:4, name:'Secy Genesis #007', collection:'Secy Genesis', price:'0.0310', floor:'0.0042', emoji:'⚡', rarity:'Epic' },
+  { id:5, name:'BTC Punk #404',       collection:'BTC Punks',      price:'0.0095', floor:'0.0080', emoji:'🤖', rarity:'Common' },
+  { id:6, name:'Satoshi Spirit #1',   collection:'Satoshi Spirits',price:'0.1500', floor:'0.1200', emoji:'🟠', rarity:'Mythic' },
+  { id:7, name:'Ordinal Ape #777',    collection:'Ordinal Apes',   price:'0.0210', floor:'0.0060', emoji:'🍌', rarity:'Rare' },
+  { id:8, name:'Secy Genesis #042', collection:'Secy Genesis', price:'0.0055', floor:'0.0042', emoji:'💎', rarity:'Uncommon' },
+  { id:9, name:'BTC Punk #1337',      collection:'BTC Punks',      price:'0.0220', floor:'0.0080', emoji:'🕶️', rarity:'Epic' },
+  { id:10,name:'Satoshi Spirit #9',   collection:'Satoshi Spirits',price:'0.0980', floor:'0.1200', emoji:'🌑', rarity:'Rare' },
+  { id:11,name:'Secy Genesis #099', collection:'Secy Genesis', price:'0.0048', floor:'0.0042', emoji:'🔴', rarity:'Common' },
+  { id:12,name:'Ordinal Ape #256',    collection:'Ordinal Apes',   price:'0.0075', floor:'0.0060', emoji:'🦧', rarity:'Uncommon' },
+];
+
+function renderNFTs(list) {
+  const grid = document.getElementById('nft-grid');
+  grid.innerHTML = list.map(n => `
+    <div class="nft-card">
+      <div class="nft-art" style="background:linear-gradient(135deg, hsl(${(n.id*37)%360},60%,8%), #0a0000);">
+        <div class="nft-art-bg"></div>
+        <span class="nft-art-emoji" style="font-size:3.5rem;">${n.emoji}</span>
+        <span class="nft-art-id">#${String(n.id).padStart(4,'0')}</span>
+      </div>
+      <div class="nft-info">
+        <div class="nft-collection">${n.collection}</div>
+        <div class="nft-name">${n.name}</div>
+        <div style="margin-bottom:8px;">
+          <span class="tag">${n.rarity}</span>
+        </div>
+        <div class="nft-price-row">
+          <div>
+            <div class="nft-price">
+              <span style="color:var(--dim);font-size:0.7rem;">₿</span> ${n.price}
+            </div>
+          </div>
+          <div class="nft-floor">
+            Floor
+            <span class="tooltip-wrap">
+              <span class="tooltip-icon">?</span>
+              <span class="tooltip-box">Collection floor price: the lowest active listing.</span>
+            </span>
+            : ₿${n.floor}
+          </div>
+        </div>
+        <div class="nft-btn-row">
+          <button class="btn btn-primary btn-sm" style="flex:1;" onclick="doTx('buy')">Buy Now</button>
+          <button class="btn btn-ghost btn-sm" onclick="openModal('list-modal')">List</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterNFTs() {
+  const q = document.getElementById('nft-search').value.toLowerCase();
+  const sort = document.getElementById('price-sort').value;
+  let filtered = nftData.filter(n =>
+    n.name.toLowerCase().includes(q) ||
+    n.collection.toLowerCase().includes(q)
+  );
+  if (sort.includes('Low → High')) filtered.sort((a,b) => parseFloat(a.price) - parseFloat(b.price));
+  if (sort.includes('High → Low')) filtered.sort((a,b) => parseFloat(b.price) - parseFloat(a.price));
+  renderNFTs(filtered);
+}
+
+renderNFTs(nftData);
+
+// ─────────────────────────────────────────
+// DAO DATA + PROPOSALS
+// ─────────────────────────────────────────
+const proposals = [
+  { id:1, title:'Increase Supply APY to 10%', dao:'Secy Core', status:'active',  yes:68, no:32, endBlock:874210, desc:'Proposal to adjust base interest rate from 8.24% to 10% for sBTC suppliers.' },
+  { id:2, title:'Add MOTO Collateral Support', dao:'Secy Core', status:'active',  yes:81, no:19, endBlock:874340, desc:'Enable MOTO as accepted collateral in SecyLend at 60% LTV.' },
+  { id:3, title:'Protocol Fee Reduction 0.1%', dao:'Builders Guild',status:'passed', yes:92, no:8,  endBlock:873900, desc:'Reduce marketplace fee from 0.25% to 0.15% to increase volume.' },
+  { id:4, title:'Launch NFT Oracle v1',        dao:'Oracle DAO', status:'pending', yes:0,  no:0,  endBlock:875000, desc:'Deploy first OP_NET price oracle for NFT collateral valuation.' },
+];
+
+const daoList = [
+  { name:'Secy Core', emoji:'⚡', members:1240, treasury:'$840K' },
+  { name:'Builders Guild', emoji:'🔨', members:380, treasury:'$210K' },
+  { name:'Oracle DAO', emoji:'🔮', members:156, treasury:'$95K' },
+  { name:'BTC Punks DAO', emoji:'👾', members:820, treasury:'$95K' },
+  { name:'Satoshi Spirits', emoji:'🟠', members:93,  treasury:'$55K' },
+];
+
+function renderProposals() {
+  document.getElementById('proposals-list').innerHTML = proposals.map(p => `
+    <div class="proposal-card">
+      <div class="proposal-header">
+        <div>
+          <div class="proposal-title">${p.title}</div>
+          <div class="proposal-meta">${p.dao} · Ends block #${p.endBlock.toLocaleString()}</div>
+        </div>
+        <span class="proposal-badge badge-${p.status}">${p.status.toUpperCase()}</span>
+      </div>
+      <div style="font-size:0.82rem;color:var(--silver);margin-bottom:1rem;">${p.desc}</div>
+      ${p.status !== 'pending' ? `
+      <div class="vote-bars">
+        <div class="vote-row">
+          <div class="vote-row-label"><span>YES</span><span>${p.yes}%</span></div>
+          <div class="vote-track"><div class="vote-fill-yes" style="width:${p.yes}%;"></div></div>
+        </div>
+        <div class="vote-row">
+          <div class="vote-row-label"><span>NO</span><span>${p.no}%</span></div>
+          <div class="vote-track"><div class="vote-fill-no" style="width:${p.no}%;"></div></div>
+        </div>
+      </div>` : '<div style="padding:1rem;text-align:center;color:var(--dim);font-size:0.82rem;border:1px dashed var(--border);border-radius:6px;margin-bottom:1rem;">Voting not yet started</div>'}
+      ${p.status === 'active' ? `
+      <div class="vote-actions">
+        <button class="btn btn-primary btn-sm" style="flex:1;" onclick="doTx('vote')">Vote YES</button>
+        <button class="btn btn-ghost btn-sm" style="flex:1;" onclick="doTx('vote')">Vote NO</button>
+      </div>` : ''}
+    </div>
+  `).join('');
+}
+
+function renderDAOList() {
+  document.getElementById('dao-list').innerHTML = daoList.map(d => `
+    <div class="dao-item">
+      <div class="dao-avatar">${d.emoji}</div>
+      <div style="flex:1;">
+        <div class="dao-name">${d.name}</div>
+        <div class="dao-members">${d.members.toLocaleString()} members • ${d.treasury}</div>
+      </div>
+      <button class="btn btn-ghost btn-sm">Join →</button>
+    </div>
+  `).join('');
+}
+
+renderProposals();
+renderDAOList();
+
+// ─────────────────────────────────────────
+// LTV UPDATER
+// ─────────────────────────────────────────
+function updateLTV() {
+  const collateral = parseFloat(document.getElementById('collateral-amount').value) || 0;
+  const borrow = parseFloat(document.getElementById('borrow-amount').value) || 0;
+  const ltv = collateral > 0 ? Math.min(100, Math.round((borrow / collateral) * 100)) : 52;
+  const bar = document.getElementById('ltv-bar');
+  bar.style.width = ltv + '%';
+  bar.classList.remove('warn','danger');
+  if (ltv > 75) bar.classList.add('danger');
+  else if (ltv > 55) bar.classList.add('warn');
+}
+
+// ─────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────
+setPage('market');
+</script>
+</body>
+</html>
