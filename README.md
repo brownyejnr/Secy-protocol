@@ -1,5 +1,5 @@
 [README.md](https://github.com/user-attachments/files/25961189/README.md)
-# ⚡ STREAK PROTOCOL
+# ⚡ SECY PROTOCOL
 ### All-in-One Bitcoin DeFi Super-App on OP_NET
 **OP_NET Vibecoding Challenge — Week 3: The Breakthrough**
 
