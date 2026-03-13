@@ -11,7 +11,7 @@ SPECY PROTOCOL — BITCOIN L1 DEFI TERMINAL
 
 ## Overview
 
-Streak Protocol is a full-stack DeFi super-app demonstrating that Bitcoin Layer 1 can host advanced DeFi ecosystems via OP_NET. It ships three production-grade smart contracts and a complete Crimson Matrix-themed frontend.
+Secy Protocol is a full-stack DeFi super-app demonstrating that Bitcoin Layer 1 can host advanced DeFi ecosystems via OP_NET. It ships three production-grade smart contracts and a complete Crimson Matrix-themed frontend.
 
 | Module | Contract | Description |
 |--------|----------|-------------|
@@ -51,14 +51,14 @@ streak-protocol/
 
 ## Smart Contract Highlights
 
-### StreakMarket
+### SecyMarket
 - Trustless peer-to-peer NFT exchange for OP_721 artifacts
 - Live floor price tracking (updates on every listing)
 - Cumulative volume tracking
 - Reentrancy guard + pause mechanism
 - `listItem` / `buyItem` / `cancelListing` / `getListing` / `floorPrice`
 
-### StreakLend
+### SecyLend
 - Single-asset supply/borrow pool
 - Linear interest accrual per block (base APY × utilisation)
 - 75% LTV cap enforced on-chain
@@ -66,7 +66,7 @@ streak-protocol/
 - NFT collateral architecture prepared (activates in v1.1)
 - Flash loan architecture documented
 
-### StreakDAO
+### SecyDAO
 - Multi-DAO registry with independent treasuries
 - Token-weighted voting (1 token = 1 vote)
 - Configurable quorum (basis points) + voting period (blocks)
